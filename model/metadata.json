@@ -1,1 +1,1 @@
-{"tfjsVersion":"1.7.4","tmVersion":"2.4.14","packageVersion":"0.8.4-alpha2","packageName":"@teachablemachine/image","timeStamp":"2026-08-25T18:40:03.467Z","userMetadata":{},"modelName":"tm-my-image-model","labels":["coin_1","unknown"],"imageSize":224}
+{"tfjsVersion":"1.7.4","tmVersion":"2.4.14","packageVersion":"0.8.4-alpha2","packageName":"@teachablemachine/image","timeStamp":"2026-08-25T19:38:06.858Z","userMetadata":{},"modelName":"tm-my-image-model","labels":["coin_1","coin_50_satang","unknown"],"imageSize":224}

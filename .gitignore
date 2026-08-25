@@ -4,6 +4,7 @@
 # Training images stay local; only the exported browser model is deployed.
 dataset/
 model-new/
+model-new0.1/
 screen_shot/
 
 # Local Codex workspace metadata.

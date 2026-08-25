@@ -9,6 +9,7 @@
 - ปรับ UI เป็นธีม Thai Mint Modern แบบ camera-first รองรับทั้ง portrait/landscape โดยยังคง state และ behavior ของระบบเดิม
 - เก็บ `dataset/` และวิดีโอต้นฉบับเป็น local-only ผ่าน `.gitignore`; GitHub เก็บเฉพาะเว็บและโมเดลที่ export แล้ว
 - Update 0.1 เพิ่ม `MotionController` แยกจาก camera/classifier ใช้ accelerometer/gyroscope เป็น gate โดยยืนยันผลเมื่ออุปกรณ์นิ่งอย่างน้อย 500 ms และ fallback เป็น camera-only เมื่อ sensor ใช้ไม่ได้
+- ปัจจุบันใช้โมเดล 3 classes ตัวเดียว: `coin_1`, `coin_50_satang`, `unknown` เพื่อแยกเหรียญ 1 บาท เหรียญ 50 สตางค์ และวัตถุที่ไม่ใช่เหรียญ
 
 ### ข้อควรระวัง / bugs ที่พบระหว่างพัฒนา
 

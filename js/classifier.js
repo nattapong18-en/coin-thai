@@ -3,7 +3,7 @@ const METADATA_URL = "model/metadata.json";
 
 // จุดเดียวสำหรับปรับพฤติกรรมการตรวจจับทั้งหมด
 export const CLASSIFIER_CONFIG = Object.freeze({
-  activeClasses: Object.freeze(["coin_1", "unknown"]), // prototype ปัจจุบัน: เหรียญ 1 บาทเท่านั้น
+  activeClasses: Object.freeze(["coin_1", "coin_50_satang", "unknown"]),
   confidenceThreshold: 0.8,
   historySize: 5,
   minimumVotes: 3,
@@ -17,7 +17,8 @@ export const CLASS_LABELS = Object.freeze({
   coin_2: "เหรียญ 2 บาท",
   coin_5: "เหรียญ 5 บาท",
   coin_10: "เหรียญ 10 บาท",
-  unknown: "ไม่ใช่เหรียญ 1 บาท",
+  coin_50_satang: "เหรียญ 50 สตางค์",
+  unknown: "ไม่ใช่เหรียญ",
 });
 
 const REQUIRED_CLASSES = CLASSIFIER_CONFIG.activeClasses;
@@ -63,22 +64,16 @@ export class CoinClassifier {
         throw new Error(`model.json returned HTTP ${modelResponse.status}`);
       }
 
-      const metadata = await loadOptionalMetadata();
+      const metadata = await loadOptionalMetadata(METADATA_URL);
       if (metadata?.labels) this.labels = validateLabels(metadata.labels);
 
-      try {
-        this.model = await tf.loadLayersModel(MODEL_URL);
-      } catch (layersError) {
-        try {
-          this.model = await tf.loadGraphModel(MODEL_URL);
-        } catch (graphError) {
-          throw new AggregateError([layersError, graphError], "Unsupported model format");
-        }
-      }
+      this.model = await loadTensorFlowModel(MODEL_URL);
 
       this.#configureCanvas(metadata);
       return this.model;
     } catch (error) {
+      this.model?.dispose?.();
+      this.model = null;
       if (error instanceof ModelError) throw error;
       throw new ModelError("load-failed", "โหลดโมเดลไม่สำเร็จ กรุณาตรวจสอบไฟล์ model.json และ weights.bin", error);
     }
@@ -143,25 +138,13 @@ export class CoinClassifier {
       return tensor.expandDims(0);
     });
 
-    let output;
     try {
-      output = this.model.executeAsync
-        ? await this.model.executeAsync(input)
-        : this.model.predict(input);
-      if (output instanceof Promise) output = await output;
-
-      const outputTensor = Array.isArray(output) ? output[0] : output;
-      const scores = Array.from(await outputTensor.data());
-      if (scores.length !== this.labels.length) {
-        throw new ModelError("classes", `โมเดลมี ${scores.length} classes แต่ metadata ระบุ ${this.labels.length} classes`);
-      }
+      const scores = await predictScores(this.model, input, this.labels.length);
 
       const bestIndex = scores.indexOf(Math.max(...scores));
       return { label: this.labels[bestIndex], confidence: scores[bestIndex] };
     } finally {
       input.dispose();
-      if (Array.isArray(output)) output.forEach((tensor) => tensor.dispose());
-      else output?.dispose?.();
     }
   }
 
@@ -200,7 +183,7 @@ export class CoinClassifier {
   }
 
   #configureCanvas(metadata) {
-    const shape = this.model.inputs?.[0]?.shape;
+    const shape = this.model?.inputs?.[0]?.shape;
     const modelHeight = Number(shape?.[1]);
     const modelWidth = Number(shape?.[2]);
     const metadataSize = Number(metadata?.imageSize);
@@ -210,11 +193,40 @@ export class CoinClassifier {
   }
 }
 
-async function loadOptionalMetadata() {
-  const response = await fetch(METADATA_URL, { cache: "no-cache" });
+async function loadOptionalMetadata(url) {
+  const response = await fetch(url, { cache: "no-cache" });
   if (response.status === 404) return null;
   if (!response.ok) throw new Error(`metadata.json returned HTTP ${response.status}`);
   return response.json();
+}
+
+async function loadTensorFlowModel(url) {
+  try {
+    return await tf.loadLayersModel(url);
+  } catch (layersError) {
+    try {
+      return await tf.loadGraphModel(url);
+    } catch (graphError) {
+      throw new AggregateError([layersError, graphError], `Unsupported model format: ${url}`);
+    }
+  }
+}
+
+async function predictScores(model, input, expectedClasses) {
+  let output;
+  try {
+    output = model.executeAsync ? await model.executeAsync(input) : model.predict(input);
+    if (output instanceof Promise) output = await output;
+    const outputTensor = Array.isArray(output) ? output[0] : output;
+    const scores = Array.from(await outputTensor.data());
+    if (scores.length !== expectedClasses) {
+      throw new ModelError("classes", `โมเดลมี ${scores.length} classes แต่ metadata ระบุ ${expectedClasses} classes`);
+    }
+    return scores;
+  } finally {
+    if (Array.isArray(output)) output.forEach((tensor) => tensor.dispose());
+    else output?.dispose?.();
+  }
 }
 
 function validateLabels(labels) {

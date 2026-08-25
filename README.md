@@ -1,57 +1,69 @@
-# Thai 1-Baht Coin Scanner
+# Thai Coin Scanner
 
-A course project for **Special Topics**. This web application uses a mobile camera, TensorFlow.js, and device motion sensors to identify a Thai 1-baht coin in real time. All processing runs directly in the browser; camera images and sensor data are not uploaded or stored.
+เว็บนี้เป็นงานส่งวิชา **Special Topics** มีเป้าหมายเพื่อสาธิตการสร้างเว็บที่ติดต่อกับ hardware ของโทรศัพท์ผ่าน browser ได้แก่ **Camera** และ **Motion Sensor**
 
-## Current Scope
+ระบบใช้ `TensorFlow.js` วิเคราะห์ภาพจากกล้องแบบ realtime และใช้ `DeviceMotionEvent` ตรวจว่าโทรศัพท์นิ่งหรือกำลังเคลื่อนไหว
 
-This prototype supports only two results:
+## ขอบเขตของ Model
 
-- `coin_1` — Thai 1-baht coin
-- `unknown` — anything else
+Model รุ่นปัจจุบันรองรับเฉพาะ:
 
-It cannot identify 2-baht, 5-baht, 10-baht, or other coins. The scanner is designed for one coin at a time.
+- `coin_1` — เหรียญ 1 บาท
+- `coin_50_satang` — เหรียญ 50 สตางค์
+- `unknown` — สิ่งที่ไม่ใช่เหรียญ
 
-## Device Support
+Model นี้ยังไม่รองรับเหรียญ 2 บาท, 5 บาท, 10 บาท หรือเหรียญชนิดอื่นโดยตรง ผลลัพธ์อาจผิดพลาดได้ เนื่องจากเป็น prototype ที่ยังมีเวลาเก็บ dataset และ train model จำกัด ควรถือโทรศัพท์ให้นิ่ง จัดเหรียญไว้กลางกรอบ และใช้แสงที่เหมาะสม
 
-- **Android:** Works reliably in current testing.
-- **iOS:** The scanner works, but predictions may be unstable and switch between `coin_1` and `unknown`.
+## Hardware Integration
 
-The iOS issue is a known limitation of this prototype. More training images captured with iOS devices are needed to improve stability.
+1. **Camera API**
+   - ใช้ `navigator.mediaDevices.getUserMedia()` เพื่อเปิดกล้องหลัง
+   - อ่านภาพจาก `video` แล้วส่งเข้า `TensorFlow.js model`
+   - ประมวลผลภายใน browser โดยไม่มีการ upload ภาพขึ้น server
 
-## Hardware Integrations
+2. **Accelerometer / Gyroscope**
+   - ใช้ `DeviceMotionEvent` ตรวจการเคลื่อนไหวของโทรศัพท์
+   - แสดงสถานะ `Stable` หรือ `Moving / Hold phone steady`
+   - แสดงผล prediction เมื่อโทรศัพท์นิ่งอย่างน้อย 500 ms
+   - หาก sensor ไม่รองรับหรือไม่ได้รับ permission ระบบจะแจ้งเตือนและทำงานใน camera-only fallback mode
 
-1. **Camera:** Captures live frames from the rear camera for TensorFlow.js classification.
-2. **Accelerometer/Gyroscope:** Uses `DeviceMotionEvent` to detect whether the phone is stable or moving.
+## การรองรับอุปกรณ์
 
-A coin result is confirmed only after the phone has remained stable for at least 500 ms. If the phone moves again, the confirmed result is temporarily hidden until the phone is stable. On iOS, the motion sensor permission is requested when the user starts the scanner.
-
-If motion sensors are unavailable or permission is denied, the app displays a warning and continues in camera-only fallback mode. Motion sensitivity and the stable duration can be adjusted in `MOTION_CONFIG` inside `js/motion.js`.
+- **Android:** ทำงานค่อนข้างเสถียรจากการทดสอบปัจจุบัน
+- **iOS:** เปิดกล้องและ scan ได้ แต่อาจมี prediction สลับหรือไม่เสถียร เนื่องจาก browser และ motion permission ของ iOS
 
 ## Run Locally
+
+รันจากโฟลเดอร์โปรเจกต์:
 
 ```bash
 python3 -m http.server 8080
 ```
 
-Then open `http://localhost:8080`.
+แล้วเปิด `http://localhost:8080`
 
-Camera access requires HTTPS or `localhost`. A regular LAN address such as `http://192.168.x.x:8080` may not allow camera access on mobile devices.
+การใช้กล้องต้องเปิดผ่าน `HTTPS` หรือ `localhost` เท่านั้น การเปิดผ่าน IP ในวง LAN เช่น `http://192.168.x.x:8080` อาจไม่สามารถขอสิทธิ์ใช้กล้องบนมือถือได้
 
 ## Technology
 
-- HTML, CSS, and JavaScript
+- HTML, CSS, JavaScript
 - TensorFlow.js
-- Mobile Camera API (`getUserMedia`)
-- Teachable Machine exported model
+- Camera API: `navigator.mediaDevices.getUserMedia()`
+- Motion Sensor API: `DeviceMotionEvent`
+- TensorFlow.js Layers Model ที่ export จาก Teachable Machine
 
 ## Project Structure
 
 ```text
-index.html       Web page
-css/             User interface styles
-js/              Camera, classification, and UI logic
+index.html       หน้าเว็บหลัก
+css/             UI styles
+js/camera.js     Camera lifecycle และ permission
+js/motion.js     Accelerometer/Gyroscope และ stable gate
+js/classifier.js Model loading และ realtime inference
+js/ui.js         UI state และ prediction result
+js/main.js       การประสานงานของระบบ
 model/           Exported TensorFlow.js model
-dataset/         Local training images (not uploaded to GitHub)
+dataset/         Training images ภายในเครื่อง ไม่ upload ขึ้น GitHub
 ```
 
-Raw training videos and the `dataset/` directory are excluded from GitHub. Only the web application and exported model are included.
+ไฟล์ `dataset/`, วิดีโอต้นฉบับ และ `screen_shot/` ถูก ignore จาก GitHub ส่วนที่เผยแพร่คือ source code และ exported model เท่านั้น
