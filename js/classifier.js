@@ -17,7 +17,7 @@ export const CLASS_LABELS = Object.freeze({
   coin_2: "เหรียญ 2 บาท",
   coin_5: "เหรียญ 5 บาท",
   coin_10: "เหรียญ 10 บาท",
-  unknown: "ไม่พบเหรียญ",
+  unknown: "ไม่ใช่เหรียญ 1 บาท",
 });
 
 const REQUIRED_CLASSES = CLASSIFIER_CONFIG.activeClasses;
