@@ -3,6 +3,8 @@
 
 # Training images stay local; only the exported browser model is deployed.
 dataset/
+model-new/
+screen_shot/
 
 # Local Codex workspace metadata.
 .agents/
