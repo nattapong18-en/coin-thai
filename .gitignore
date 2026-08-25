@@ -1,0 +1,9 @@
+# Raw source videos are large and are not needed by the web app.
+*.mp4
+
+# Training images stay local; only the exported browser model is deployed.
+dataset/
+
+# Local Codex workspace metadata.
+.agents/
+.codex/
