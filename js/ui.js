@@ -12,12 +12,15 @@ export class ScannerUI {
     this.confidenceText = document.querySelector("#confidenceText");
     this.confidenceBar = document.querySelector("#confidenceBar");
     this.status = document.querySelector("#statusMessage");
+    this.motionStatus = document.querySelector("#motionStatus");
+    this.motionLabel = document.querySelector("#motionLabel");
   }
 
   render(state, details = {}) {
     const states = {
       idle: ["ยังไม่ได้เปิดกล้อง", "พร้อมเริ่มใช้งาน", "เริ่มสแกน"],
       loading: ["กำลังเตรียมระบบ...", "กำลังโหลด model และเปิดกล้อง", "กำลังเริ่ม..."],
+      moving: ["ถือโทรศัพท์ให้นิ่ง", details.message ?? "โทรศัพท์กำลังเคลื่อนไหว", "หยุดกล้อง"],
       detecting: ["กำลังตรวจจับ...", "จัดเหรียญให้อยู่กลางกรอบและถือกล้องให้นิ่ง", "หยุดกล้อง"],
       detected: [details.label, "ตรวจพบเหรียญ", "หยุดกล้อง"],
       unknown: ["ไม่พบเหรียญ", "ลองปรับระยะ แสง หรือพื้นหลัง", "หยุดกล้อง"],
@@ -34,7 +37,7 @@ export class ScannerUI {
     this.cameraStage.dataset.state = state;
     this.resultCard.dataset.state = state;
 
-    const cameraIsLive = ["detecting", "detected", "unknown"].includes(state);
+    const cameraIsLive = ["moving", "detecting", "detected", "unknown"].includes(state);
     this.placeholder.hidden = cameraIsLive;
     this.liveBadge.hidden = !cameraIsLive;
 
@@ -47,5 +50,10 @@ export class ScannerUI {
     } else {
       this.confidenceBar.style.width = "0%";
     }
+  }
+
+  renderMotion({ state, message }) {
+    this.motionStatus.dataset.state = state;
+    this.motionLabel.textContent = message;
   }
 }

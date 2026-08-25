@@ -7,3 +7,4 @@ dataset/
 # Local Codex workspace metadata.
 .agents/
 .codex/
+.playwright-cli/

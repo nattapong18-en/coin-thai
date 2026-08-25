@@ -1,13 +1,16 @@
 import { CameraController } from "./camera.js";
 import { CoinClassifier } from "./classifier.js";
+import { MotionController } from "./motion.js";
 import { ScannerUI } from "./ui.js";
 
 const video = document.querySelector("#cameraPreview");
 const ui = new ScannerUI();
 const camera = new CameraController(video);
 const classifier = new CoinClassifier(video, handlePrediction);
+const motion = new MotionController(handleMotionStatus);
 let starting = false;
 let startAttempt = 0;
+let latestPrediction = { state: "detecting" };
 
 ui.button.addEventListener("click", () => {
   if (camera.isRunning || starting) stopScanner();
@@ -27,18 +30,20 @@ async function startScanner() {
 
   starting = true;
   const activeAttempt = ++startAttempt;
+  latestPrediction = { state: "detecting" };
   ui.render("loading");
 
   try {
-    // เริ่มพร้อมกันเพื่อลดเวลารอ แต่ inference จะเริ่มเมื่อทั้งคู่พร้อมเท่านั้น
-    await Promise.all([camera.start(), classifier.load()]);
+    // เรียก motion.start() จาก user gesture โดยตรง เพราะ iOS ต้องขอ permission ตรงนี้
+    await Promise.all([motion.start(), camera.start(), classifier.load()]);
     if (!starting || activeAttempt !== startAttempt) return;
-    ui.render("detecting");
     classifier.start();
+    renderLatestPrediction();
   } catch (error) {
     if (activeAttempt !== startAttempt) return;
     camera.stop();
     classifier.stop();
+    motion.stop();
     ui.render("error", { message: error?.message ?? "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ" });
     console.error(error);
   } finally {
@@ -51,6 +56,8 @@ function stopScanner() {
   starting = false;
   classifier.stop();
   camera.stop();
+  motion.stop();
+  latestPrediction = { state: "detecting" };
   ui.render("idle");
 }
 
@@ -59,15 +66,41 @@ function cleanup() {
   starting = false;
   camera.stop();
   classifier.dispose();
+  motion.dispose();
 }
 
 function handlePrediction(result) {
+  latestPrediction = result;
   if (result.state === "error") {
     camera.stop();
+    motion.stop();
     ui.render("error", { message: "ประมวลผลภาพไม่สำเร็จ กรุณาตรวจสอบว่าโมเดลเข้ากันได้" });
     console.error(result.error);
     return;
   }
+
+  renderLatestPrediction();
+}
+
+function handleMotionStatus(status) {
+  ui.renderMotion(status);
+  if (!camera.isRunning) return;
+
+  if (motionAllowsPrediction()) renderLatestPrediction();
+  else ui.render("moving", { message: status.message });
+}
+
+function motionAllowsPrediction() {
+  return motion.status === "stable" || ["unavailable", "denied"].includes(motion.status);
+}
+
+function renderLatestPrediction() {
+  if (!motionAllowsPrediction()) {
+    ui.render("moving", { message: motion.status === "moving" ? "ถือโทรศัพท์ให้นิ่ง" : "ถือนิ่งไว้สักครู่" });
+    return;
+  }
+
+  const result = latestPrediction;
   if (result.state === "detecting") {
     ui.render("detecting");
     return;

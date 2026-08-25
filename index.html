@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#07131d">
     <title>สแกนเหรียญไทย · Thai Coin Scanner</title>
+    <link rel="icon" href="data:,">
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js" defer></script>
     <script type="module" src="js/main.js"></script>
@@ -70,6 +71,13 @@
 
         <div class="scanner-controls">
           <p class="hint"><span aria-hidden="true">◎</span> ใช้กล้องหลัง และให้เห็นเหรียญเพียง 1 เหรียญ</p>
+          <div class="motion-status" id="motionStatus" data-state="idle" role="status">
+            <span class="motion-dot" aria-hidden="true"></span>
+            <span>
+              <small>MOTION SENSOR</small>
+              <strong id="motionLabel">Motion sensor พร้อมเริ่มงาน</strong>
+            </span>
+          </div>
           <p class="status" id="statusMessage" role="status">พร้อมเริ่มใช้งาน</p>
           <button class="primary-button" id="cameraButton" type="button">
             <span class="button-camera-icon" aria-hidden="true"></span>
