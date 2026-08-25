@@ -67,3 +67,22 @@ dataset/         Training images ภายในเครื่อง ไม่ 
 ```
 
 ไฟล์ `dataset/`, วิดีโอต้นฉบับ และ `screen_shot/` ถูก ignore จาก GitHub ส่วนที่เผยแพร่คือ source code และ exported model เท่านั้น
+
+## Screenshots
+
+ตัวอย่างหน้าเว็บและผลการตรวจจับจาก model:
+
+### Desktop และ Mobile
+
+<p>
+  <img src="assets/screenshots/desktop-idle.png" alt="Desktop idle" width="48%">
+  <img src="assets/screenshots/mobile-idle.jpg" alt="Mobile idle" width="48%">
+</p>
+
+### ผลการตรวจจับ
+
+<p>
+  <img src="assets/screenshots/result-1-baht.jpg" alt="ผลตรวจเหรียญ 1 บาท" width="31%">
+  <img src="assets/screenshots/result-50-satang.jpg" alt="ผลตรวจเหรียญ 50 สตางค์" width="31%">
+  <img src="assets/screenshots/result-not-a-coin.jpg" alt="ผลตรวจวัตถุที่ไม่ใช่เหรียญ" width="31%">
+</p>
